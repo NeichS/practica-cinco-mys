@@ -1,4 +1,4 @@
-import { BookOpen, Eye } from "lucide-react"
+import { BookOpen, Eye, Lightbulb } from "lucide-react"
 import type { Teoria } from "@/components/models/types"
 import { RichText } from "@/components/rich-text"
 import { Tex } from "@/components/tex"
@@ -20,6 +20,29 @@ export function TeoriaCard({ teoria, id }: { teoria: Teoria; id?: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        <div className="grid gap-4 rounded-xl bg-background/70 p-4 ring-1 ring-foreground/10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:p-5">
+          <div>
+            <h3 className="mb-2 flex items-center gap-2 text-base font-semibold">
+              <Lightbulb className="size-4 text-primary" aria-hidden="true" /> ¿Para qué sirve?
+            </h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <RichText>{teoria.practica.sirve}</RichText>
+            </p>
+          </div>
+          <div>
+            <h4 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">Problemas que resuelve</h4>
+            <ul className="grid gap-2 text-sm leading-relaxed text-muted-foreground">
+              {teoria.practica.resuelve.map((r, i) => (
+                <li key={i} className="flex gap-2.5">
+                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                  <span>
+                    <RichText>{r}</RichText>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
         <div>
           <h3 className="mb-3 text-base font-semibold">Qué significa cada fórmula</h3>
           <div className="overflow-hidden rounded-xl bg-background/70 ring-1 ring-foreground/10">

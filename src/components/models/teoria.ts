@@ -5,6 +5,14 @@ const r = String.raw
 export const TEORIA: Record<string, Teoria> = {
   enfriamiento: {
     resumen: r`Describe cómo cambia la temperatura de un objeto que intercambia calor con un medio a temperatura constante: un café que se enfría o una bebida fría que se calienta. La idea es que el objeto pierde (o gana) calor más rápido cuanto mayor es su diferencia de temperatura con el ambiente.`,
+    practica: {
+      sirve: r`Predecir **cuánto tarda** un objeto en enfriarse o calentarse hasta una temperatura dada, o al revés, deducir **cuánto tiempo pasó** a partir de la temperatura que tiene ahora.`,
+      resuelve: [
+        r`**En la cocina:** ¿en cuántos minutos el café baja de 90 °C a 60 °C para poder tomarlo? Con $k = 0.1$ y una habitación a 20 °C, unos 5.6 minutos.`,
+        r`**Medicina forense:** estimar la hora de muerte a partir de la temperatura del cuerpo y la del ambiente.`,
+        r`**Alimentos e industria:** cuánto tiempo hay que dejar algo en la heladera o el freezer hasta que llegue a una temperatura segura, o comparar aislantes (un termo tiene $k$ chico).`,
+      ],
+    },
     formulas: [
       {
         nombre: "Ecuación diferencial",
@@ -53,6 +61,14 @@ export const TEORIA: Record<string, Teoria> = {
 
   malthus: {
     resumen: r`Modelo más simple de crecimiento de una población: supone recursos ilimitados, así que la cantidad de nacimientos menos muertes por unidad de tiempo es proporcional a la población actual.`,
+    practica: {
+      sirve: r`Proyectar cómo evoluciona **cualquier cantidad que crece (o decrece) a un ritmo proporcional a sí misma**, mientras no haya límites de recursos.`,
+      resuelve: [
+        r`**Demografía:** ¿cuándo se duplica una población que crece 3 % anual? En $\ln 2 / 0.03 \approx 23$ años.`,
+        r`**Biología:** crecimiento de bacterias en un cultivo en su etapa inicial, antes de que se agoten los nutrientes.`,
+        r`**Finanzas:** es la misma ecuación que el interés compuesto continuo: un capital al $r$ % anual crece como $P_0 e^{rt}$.`,
+      ],
+    },
     formulas: [
       {
         nombre: "Ecuación diferencial",
@@ -85,6 +101,14 @@ export const TEORIA: Record<string, Teoria> = {
 
   decaimiento: {
     resumen: r`Cada núcleo radiactivo tiene una probabilidad fija de desintegrarse por unidad de tiempo, así que la cantidad que decae es proporcional a la cantidad que queda. Es la misma ecuación que Malthus con tasa negativa, y es la base de la datación por carbono-14.`,
+    practica: {
+      sirve: r`Saber **cuánto material radiactivo queda** después de un tiempo, o al revés, **cuánto tiempo pasó** midiendo cuánto queda.`,
+      resuelve: [
+        r`**Arqueología:** datación por carbono-14. Un hueso que conserva el 30 % de su C-14 tiene unos 9950 años.`,
+        r`**Medicina nuclear:** cuánta actividad de yodo-131 le queda a un paciente después de un tratamiento; a los 8 días, la mitad.`,
+        r`**Residuos nucleares:** cuánto tiempo hay que almacenar el cesio-137. Tras 10 semividas (≈ 300 años) queda el 0.1 %.`,
+      ],
+    },
     formulas: [
       {
         nombre: "Ecuación diferencial",
@@ -138,6 +162,14 @@ export const TEORIA: Record<string, Teoria> = {
 
   sistemas: {
     resumen: r`Un sistema de dos ecuaciones lineales acopladas: la derivada de cada variable es una combinación lineal de $x$ e $y$. Toda la información está en la matriz $A$: sus autovalores deciden si las soluciones crecen, decaen u oscilan, y el diagrama en bloques muestra cómo se implementaría con integradores, sumadores y ganancias.`,
+    practica: {
+      sirve: r`Analizar **cualquier sistema de dos variables que se influyen entre sí** y saber, sin resolverlo, si vuelve al equilibrio, se aleja u oscila: alcanza con mirar los autovalores de $A$.`,
+      resuelve: [
+        r`**Ingeniería mecánica y eléctrica:** un resorte con amortiguador o un circuito RLC se escriben así. Los autovalores dicen si oscila, si se amortigua o si se vuelve inestable.`,
+        r`**Control y simulación:** el diagrama en bloques es exactamente cómo se arma el sistema en Simulink, Xcos o con electrónica analógica (integradores, sumadores y ganancias).`,
+        r`**Sistemas no lineales:** cerca de un equilibrio, cualquier sistema se aproxima por uno lineal (linealización), y se clasifica igual. Es lo que se hace en el Ejercicio 5.`,
+      ],
+    },
     formulas: [
       {
         nombre: "Forma matricial",
@@ -185,6 +217,14 @@ export const TEORIA: Record<string, Teoria> = {
 
   "lotka-volterra": {
     resumen: r`Modelo clásico de dos especies que interactúan: presas $x$ (por ejemplo conejos) y depredadores $y$ (zorros). Las presas crecen solas y son comidas; los depredadores mueren solos y se reproducen comiendo. El resultado son oscilaciones periódicas de ambas poblaciones.`,
+    practica: {
+      sirve: r`Entender y predecir la dinámica de **dos poblaciones que dependen una de la otra**: por qué oscilan, con qué período y alrededor de qué valores.`,
+      resuelve: [
+        r`**Ecología:** explica ciclos reales como los de liebres y linces en Canadá, que suben y bajan con un desfase de varios años.`,
+        r`**Pesca:** el propio Volterra lo usó para explicar por qué, cuando se pescó menos en el Adriático durante la Primera Guerra Mundial, aumentó la proporción de tiburones.`,
+        r`**Control de plagas:** anticipar qué pasa al introducir un depredador o aplicar un insecticida que afecta a ambas especies; a veces la plaga termina aumentando en promedio.`,
+      ],
+    },
     formulas: [
       {
         nombre: "Ecuación de las presas",

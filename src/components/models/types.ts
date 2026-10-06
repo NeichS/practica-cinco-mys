@@ -37,6 +37,8 @@ export type Formula = {
 export type Teoria = {
   /** Qué fenómeno modela la ecuación. Admite $…$. */
   resumen: string
+  /** Uso práctico: para qué sirve la ecuación y problemas reales que resuelve. Admite $…$. */
+  practica: { sirve: string; resuelve: string[] }
   formulas: Formula[]
   /** Cómo leer los gráficos de la simulación. Admite $…$. */
   lectura: string[]
