@@ -1,69 +1,107 @@
-import Image from "next/image";
+"use client"
+
+import { useState } from "react"
+import { BookOpen } from "lucide-react"
+import { MODELOS } from "@/components/models"
+import type { Params } from "@/components/models/types"
+import { ParamPanel } from "@/components/param-panel"
+import { TeoriaCard } from "@/components/teoria-card"
+import { Tex } from "@/components/tex"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+
+const inicial = () => Object.fromEntries(MODELOS.map((m) => [m.id, { ...m.defaults }])) as Record<string, Params>
 
 export default function Home() {
+  const [activo, setActivo] = useState(MODELOS[0].id)
+  const [params, setParams] = useState(inicial)
+  const model = MODELOS.find((m) => m.id === activo)!
+  const p = params[activo]
+
+  const cambiar = (key: string, value: Params[string]) =>
+    setParams((prev) => {
+      let next: Params = { ...prev[activo], [key]: value }
+      if (model.onChange) next = model.onChange(key, value, next)
+      return { ...prev, [activo]: next }
+    })
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-full flex-col">
+      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="flex items-baseline gap-3">
+            <span className="font-semibold tracking-tight">Modelos y Simulación</span>
+            <span className="hidden text-sm text-muted-foreground sm:inline">Trabajo Práctico 5 · Ecuaciones diferenciales</span>
+          </div>
+          <ThemeToggle />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+      </header>
+
+      <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
+        <nav aria-label="Modelos" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="grid min-w-[720px] grid-cols-5 gap-2">
+            {MODELOS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setActivo(m.id)}
+                aria-current={m.id === activo ? "page" : undefined}
+                className={cn(
+                  "group rounded-xl border bg-card px-3.5 py-3 text-left transition-all hover:border-foreground/20 hover:shadow-sm",
+                  m.id === activo && "border-primary/60 bg-accent shadow-sm ring-1 ring-primary/20"
+                )}
+              >
+                <div className="text-xs text-muted-foreground">{m.ejercicio}</div>
+                <div className="mt-0.5 font-medium tracking-tight">{m.title}</div>
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
+            <ParamPanel
+              model={model}
+              params={p}
+              onChange={cambiar}
+              onReset={() => setParams((prev) => ({ ...prev, [activo]: { ...model.defaults } }))}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </aside>
+
+          <section className="flex min-w-0 flex-col gap-4">
+            <Card>
+              <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{model.ejercicio}</Badge>
+                    <h1 className="text-xl font-semibold tracking-tight">{model.title}</h1>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{model.description}</p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="mt-1 h-auto px-0"
+                    onClick={() => document.getElementById("explicacion")?.scrollIntoView({ behavior: "smooth" })}
+                  >
+                    <BookOpen /> ¿Para qué sirve cada fórmula?
+                  </Button>
+                </div>
+                <div className="overflow-x-auto text-[0.95rem]">
+                  <Tex display>{model.equation}</Tex>
+                </div>
+              </CardContent>
+            </Card>
+            <model.View key={model.id} p={p} set={(patch) => setParams((prev) => ({ ...prev, [activo]: { ...prev[activo], ...patch } }))} />
+            <TeoriaCard id="explicacion" teoria={model.teoria} />
+          </section>
         </div>
       </main>
+
+      <footer className="border-t py-4 text-center text-xs text-muted-foreground">
+        Soluciones analíticas comparadas con Euler, RK4 y Monte Carlo — calculadas en el navegador.
+      </footer>
     </div>
-  );
+  )
 }
