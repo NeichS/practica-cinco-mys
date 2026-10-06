@@ -31,7 +31,7 @@ export default function Home() {
   const cambiar = (key: string, value: Params[string]) =>
     setParams((prev) => {
       let next: Params = { ...prev[activo], [key]: value }
-      if (model.onChange) next = model.onChange(key, value, next)
+      if (model.onChange) next = model.onChange(key, value, next, prev[activo])
       return { ...prev, [activo]: next }
     })
 

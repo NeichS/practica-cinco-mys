@@ -13,9 +13,17 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import type { Model, ParamDef, Params } from "@/components/models/types"
 
-const decimales = (step: number) => Math.max(0, -Math.floor(Math.log10(step) + 1e-9))
-
-function SliderParam({ def, value, onChange }: { def: Extract<ParamDef, { min: number }>; value: number; onChange: (v: number) => void }) {
+function SliderParam({
+  def,
+  value,
+  unit,
+  onChange,
+}: {
+  def: Extract<ParamDef, { min: number }>
+  value: number
+  unit?: string
+  onChange: (v: number) => void
+}) {
   const id = `param-${def.key}`
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
@@ -33,7 +41,7 @@ function SliderParam({ def, value, onChange }: { def: Extract<ParamDef, { min: n
             id={id}
             type="number"
             inputMode="decimal"
-            value={Number(value.toFixed(decimales(def.step)))}
+            value={Number(value.toPrecision(8))}
             step={def.step}
             onChange={(e) => {
               const v = parseFloat(e.target.value)
@@ -41,7 +49,7 @@ function SliderParam({ def, value, onChange }: { def: Extract<ParamDef, { min: n
             }}
             className="h-7 w-20 px-2 text-right font-mono text-xs tabular-nums"
           />
-          {def.unit && <span className="min-w-8 text-xs text-muted-foreground">{def.unit}</span>}
+          {unit && <span className="min-w-8 text-xs text-muted-foreground">{unit}</span>}
         </div>
       </div>
       <Slider
@@ -142,7 +150,14 @@ export function ParamPanel({
               </div>
             )
           } else {
-            control = <SliderParam def={def} value={Number(params[def.key])} onChange={(v) => onChange(def.key, v)} />
+            control = (
+              <SliderParam
+                def={def}
+                value={Number(params[def.key])}
+                unit={typeof def.unit === "function" ? def.unit(params) : def.unit}
+                onChange={(v) => onChange(def.key, v)}
+              />
+            )
           }
           return (
             <Fragment key={def.key}>

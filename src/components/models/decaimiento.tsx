@@ -14,6 +14,15 @@ const CADA = 15
 const FAMILIA_C = [0.2, 0.4, 0.6, 0.8]
 const FAMILIA_T = [0.25, 0.5, 2, 4]
 
+/** Unidades de tiempo disponibles, con su equivalencia en segundos. */
+export const UNIDADES: Record<string, { label: string; singular: string; segundos: number }> = {
+  segundos: { label: "segundos", singular: "s", segundos: 1 },
+  minutos: { label: "minutos", singular: "min", segundos: 60 },
+  horas: { label: "horas", singular: "h", segundos: 3600 },
+  días: { label: "días", singular: "día", segundos: 86400 },
+  años: { label: "años", singular: "año", segundos: 365.25 * 86400 },
+}
+
 export const ISOTOPOS: Record<string, { label: string; thalf: number; unidad: string }> = {
   c14: { label: "Carbono-14", thalf: 5730, unidad: "años" },
   cs137: { label: "Cesio-137", thalf: 30.17, unidad: "años" },
@@ -21,7 +30,7 @@ export const ISOTOPOS: Record<string, { label: string; thalf: number; unidad: st
   i131: { label: "Yodo-131", thalf: 8.02, unidad: "días" },
 }
 
-const unidad = (p: Params) => ISOTOPOS[String(p.isotopo)]?.unidad ?? "u.t."
+const unidad = (p: Params) => String(p.unidad)
 
 function View({ p }: { p: Params }) {
   const thalf = num(p, "thalf")
@@ -79,7 +88,7 @@ function View({ p }: { p: Params }) {
   return (
     <div className="flex flex-col gap-4">
       <StatGrid>
-        <Stat label="λ = ln2 / T½" value={`${fmt(lam)} 1/${u.replace(/s$/, "")}`} />
+        <Stat label="λ = ln2 / T½" value={`${fmt(lam)} 1/${UNIDADES[u]?.singular ?? u}`} />
         <Stat label="Vida media τ = 1/λ" value={`${fmt(1 / lam)} ${u}`} />
         <Stat label={`N/N₀ tras ${fmt(ciclos)} T½`} value={fmt(2 ** -ciclos, 4)} hint={`error relativo RK4 ${fmt(err)}`} />
         <Stat
@@ -134,7 +143,13 @@ export const decaimiento: Model = {
       label: "Isótopo",
       options: [...Object.entries(ISOTOPOS).map(([value, i]) => ({ value, label: `${i.label} (${i.thalf} ${i.unidad})` })), { value: "custom", label: "Personalizado" }],
     },
-    { key: "thalf", label: "Semidesintegración", symbol: "T_{1/2}", min: 1, max: 10000, step: 1 },
+    { key: "thalf", label: "Semidesintegración", symbol: "T_{1/2}", unit: (p) => UNIDADES[unidad(p)]?.singular ?? "", min: 0.01, max: 10000, step: 0.01 },
+    {
+      kind: "select",
+      key: "unidad",
+      label: "Unidad de tiempo",
+      options: Object.entries(UNIDADES).map(([value, u]) => ({ value, label: u.label })),
+    },
     { key: "ciclos", label: "Horizonte (en T½)", symbol: "t_f/T_{1/2}", min: 1, max: 10, step: 1, group: "Simulación" },
     { key: "nMC", label: "Núcleos Monte Carlo", symbol: "n", min: 10, max: 5000, step: 10, group: "Simulación" },
     { key: "seed", label: "Semilla aleatoria", symbol: "s", min: 0, max: 100, step: 1, group: "Simulación" },
@@ -151,9 +166,18 @@ export const decaimiento: Model = {
       ],
     },
   ],
-  defaults: { isotopo: "c14", thalf: 5730, ciclos: 5, nMC: 1000, seed: 0, frac: 0.3, superponer: "ninguna" },
-  onChange: (key, value, p) => {
-    if (key === "isotopo" && ISOTOPOS[String(value)]) return { ...p, thalf: ISOTOPOS[String(value)].thalf }
+  defaults: { isotopo: "c14", thalf: 5730, unidad: "años", ciclos: 5, nMC: 1000, seed: 0, frac: 0.3, superponer: "ninguna" },
+  onChange: (key, value, p, previo) => {
+    if (key === "isotopo" && ISOTOPOS[String(value)]) {
+      const iso = ISOTOPOS[String(value)]
+      return { ...p, thalf: iso.thalf, unidad: iso.unidad }
+    }
+    // cambiar la unidad convierte T½: el isótopo es el mismo, solo se expresa distinto
+    if (key === "unidad") {
+      const previa = UNIDADES[String(previo.unidad)]
+      const nueva = UNIDADES[String(value)]
+      if (previa && nueva) return { ...p, thalf: Number(((num(p, "thalf") * previa.segundos) / nueva.segundos).toPrecision(6)) }
+    }
     if (key === "thalf") return { ...p, isotopo: "custom" }
     return p
   },

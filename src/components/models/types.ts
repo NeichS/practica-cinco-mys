@@ -8,7 +8,8 @@ export type ParamDef =
       key: string
       label: string
       symbol?: string
-      unit?: string
+      /** Unidad fija o calculada a partir de los demás parámetros. */
+      unit?: string | ((p: Params) => string)
       min: number
       max: number
       step: number
@@ -53,7 +54,7 @@ export type Model = {
   defaults: Params
   presets?: Preset[]
   /** Ajustes derivados al cambiar un parámetro (p.ej. elegir isótopo fija T½). */
-  onChange?: (key: string, value: Params[string], p: Params) => Params
+  onChange?: (key: string, value: Params[string], p: Params, previo: Params) => Params
   teoria: Teoria
   View: ComponentType<{ p: Params; set: (patch: Params) => void }>
 }
