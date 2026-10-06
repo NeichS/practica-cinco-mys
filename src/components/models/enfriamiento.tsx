@@ -10,7 +10,9 @@ import { num, type Model, type Params } from "./types"
 
 const N = 240
 const CADA = 10
-const FAMILIA = [0.02, 0.05, 0.1, 0.2, 0.5]
+const FAMILIA_K = [0.02, 0.05, 0.1, 0.2, 0.5]
+/** Constantes C = T0 − Tamb de la solución general T = Tamb + C·e^{−kt}. */
+const FAMILIA_C = [-40, -20, 20, 40, 60]
 
 function View({ p }: { p: Params }) {
   const k = num(p, "k")
@@ -18,9 +20,9 @@ function View({ p }: { p: Params }) {
   const Tamb = num(p, "Tamb")
   const tFin = num(p, "tFin")
   const Tobj = num(p, "Tobj")
-  const familia = Boolean(p.familia)
+  const superponer = String(p.superponer)
 
-  const exacta = (t: number, kk = k) => Tamb + (T0 - Tamb) * Math.exp(-kk * t)
+  const exacta = (t: number, kk = k, c = T0 - Tamb) => Tamb + c * Math.exp(-kk * t)
 
   const { data, err } = useMemo(() => {
     const h = tFin / N
@@ -35,23 +37,29 @@ function View({ p }: { p: Params }) {
         row.rk4 = v
         err = Math.max(err, Math.abs(v - exacta(t)))
       }
-      if (familia) FAMILIA.forEach((kk, j) => (row[`f${j}`] = exacta(t, kk)))
+      if (superponer === "k") FAMILIA_K.forEach((kk, j) => (row[`f${j}`] = exacta(t, kk)))
+      if (superponer === "c") FAMILIA_C.forEach((c, j) => (row[`f${j}`] = exacta(t, k, c)))
       data.push(row)
     }
     return { data, err }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [k, T0, Tamb, tFin, familia])
+  }, [k, T0, Tamb, tFin, superponer])
 
+  const familia = superponer !== "ninguna"
+  const etiquetas =
+    superponer === "k"
+      ? FAMILIA_K.map((kk) => `k = ${kk}`)
+      : superponer === "c"
+        ? FAMILIA_C.map((c) => `T0 = ${fmt(Tamb + c)} (C = ${c})`)
+        : []
   const series: Series[] = [
-    ...(familia
-      ? FAMILIA.map((kk, j) => ({
-          key: `f${j}`,
-          label: `k = ${kk}`,
-          color: `var(--chart-${j + 2})`,
-          width: 1.25,
-          dashed: true,
-        }))
-      : []),
+    ...etiquetas.map((label, j) => ({
+      key: `f${j}`,
+      label,
+      color: `var(--chart-${j + 2})`,
+      width: 1.25,
+      dashed: true,
+    })),
     { key: "T", label: "T(t) analítica", color: "var(--chart-1)", width: 2.5 },
     // con la familia visible los puntos RK4 se ocultan para no repetir colores
     ...(familia ? [] : [{ key: "rk4", label: "RK4", color: "var(--chart-2)", type: "dots" } as Series]),
@@ -73,7 +81,16 @@ function View({ p }: { p: Params }) {
           hint={`T(${fmt(tFin)}) = ${fmt(exacta(tFin))} °C · error RK4 ${fmt(err)}`}
         />
       </StatGrid>
-      <ChartCard title="Temperatura en función del tiempo" description="Línea: solución analítica · puntos: RK4 · línea punteada: temperatura ambiente y t = τ">
+      <ChartCard
+        title="Temperatura en función del tiempo"
+        description={
+          superponer === "c"
+            ? "Familia de soluciones T = Tamb + C·e^(−kt): misma ecuación, distinta condición inicial. Todas tienden a Tamb y nunca se cruzan."
+            : superponer === "k"
+              ? "Mismo T0 y Tamb con distintos k: k solo cambia la velocidad del proceso."
+              : "Línea: solución analítica · puntos: RK4 · línea punteada: temperatura ambiente y t = τ"
+        }
+      >
         <TimeChart
           data={data}
           series={series}
@@ -96,6 +113,7 @@ export const enfriamiento: Model = {
   ejercicio: "Ej. 1",
   title: "Enfriamiento de Newton",
   description: "Una taza de café que se enfría hacia la temperatura ambiente.",
+  question: "¿Cómo cambian el tiempo de enfriamiento y la curva al variar k o la temperatura ambiente?",
   equation: String.raw`\frac{dT}{dt} = -k\,(T - T_{amb}) \;\Rightarrow\; T(t) = T_{amb} + (T_0 - T_{amb})\,e^{-kt}`,
   params: [
     { key: "k", label: "Constante de enfriamiento", symbol: "k", unit: "1/min", min: -0.1, max: 1, step: 0.005 },
@@ -103,9 +121,19 @@ export const enfriamiento: Model = {
     { key: "Tamb", label: "Temperatura ambiente", symbol: "T_{amb}", unit: "°C", min: -30, max: 50, step: 1 },
     { key: "Tobj", label: "Temperatura objetivo", symbol: "T_{obj}", unit: "°C", min: -30, max: 100, step: 1, group: "Análisis" },
     { key: "tFin", label: "Tiempo de simulación", symbol: "t_f", unit: "min", min: 5, max: 300, step: 5, group: "Análisis" },
-    { kind: "switch", key: "familia", label: "Superponer familia de k (0.02 … 0.5)", group: "Análisis" },
+    {
+      kind: "select",
+      key: "superponer",
+      label: "Superponer curvas",
+      group: "Análisis",
+      options: [
+        { value: "ninguna", label: "Ninguna" },
+        { value: "c", label: "Familia de soluciones (distintas T0)" },
+        { value: "k", label: "Familia de k (0.02 … 0.5)" },
+      ],
+    },
   ],
-  defaults: { k: 0.1, T0: 90, Tamb: 20, Tobj: 25, tFin: 60, familia: false },
+  defaults: { k: 0.1, T0: 90, Tamb: 20, Tobj: 25, tFin: 60, superponer: "ninguna" },
   presets: [
     { label: "Café", values: { k: 0.1, T0: 90, Tamb: 20, tFin: 60 } },
     { label: "Freezer", values: { k: 0.1, T0: 90, Tamb: -18, tFin: 60 } },

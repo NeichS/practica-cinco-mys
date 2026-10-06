@@ -205,7 +205,7 @@ export function TimeChart({
       zoomed={view !== null}
     />
     <ChartContainer config={config} className={className}>
-      <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 20, left: 8 }}>
+      {({ width, height }) => <ComposedChart width={width} height={height} data={data} margin={{ top: 8, right: 16, bottom: 20, left: 8 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis
           dataKey={xKey}
@@ -274,7 +274,7 @@ export function TimeChart({
           />
         ))}
         <ZoomLayer modo={modo} logY={logY} viewRef={viewRef} onView={setView} onReset={() => setView(null)} />
-      </ComposedChart>
+      </ComposedChart>}
     </ChartContainer>
     </div>
   )

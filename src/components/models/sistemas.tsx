@@ -97,20 +97,32 @@ function View({ p, set }: { p: Params; set: (patch: Params) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, z0[0], z0[1], tFin, h])
 
+  const familia = String(p.familia)
   const trayectorias = useMemo(() => {
     const out: Trajectory[] = []
-    for (let k = 0; k < 8; k++) {
-      const ang = (2 * Math.PI * k) / 8
-      const s = rk4(f, [2.5 * Math.cos(ang), 2.5 * Math.sin(ang)], 4, 0.01)
+    const prueba = (z: [number, number], hacia: 1 | -1, t: number) => {
+      const s = rk4((tt, zz) => f(tt, zz).map((v) => hacia * v), z, t, 0.01)
       out.push({ pts: s.zs.map(([x, y]) => [x, y]), color: "var(--chart-2)", width: 1.25, opacity: 0.55 })
     }
+    if (familia === "circulo")
+      for (let k = 0; k < 8; k++) {
+        const ang = (2 * Math.PI * k) / 8
+        prueba([2.5 * Math.cos(ang), 2.5 * Math.sin(ang)], 1, 4)
+      }
+    if (familia === "grilla")
+      // cada punto de la grilla se integra hacia adelante y hacia atrás para ver la curva completa
+      for (const x of [-2.4, -1.2, 0, 1.2, 2.4])
+        for (const y of [-1.8, -0.6, 0.6, 1.8]) {
+          prueba([x, y], 1, 3)
+          prueba([x, y], -1, 3)
+        }
     const back = rk4((t, z) => f(t, z).map((v) => -v), z0, 1.5, 0.01)
     out.push({ pts: back.zs.map(([x, y]) => [x, y]), color: "var(--chart-1)", width: 1.5, dashed: true, opacity: 0.6 })
     const fwd = rk4(f, z0, tFin, 0.005)
     out.push({ pts: fwd.zs.map(([x, y]) => [x, y]), color: "var(--chart-1)", width: 2.75 })
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, z0[0], z0[1], tFin])
+  }, [key, z0[0], z0[1], tFin, familia])
 
   const autovalores = ev.im[0]
     ? `${fmt(ev.re[0])} ± ${fmt(Math.abs(ev.im[0]))}i`
@@ -140,7 +152,13 @@ function View({ p, set }: { p: Params; set: (patch: Params) => void }) {
         </ChartCard>
         <ChartCard
           title="Plano de fase"
-          description="Campo de direcciones, trayectorias desde un círculo de radio 2.5, autovectores reales (punteado) y la trayectoria de (x₀, y₀)"
+          description={`Campo de direcciones${
+            familia === "circulo"
+              ? ", familia de trayectorias desde un círculo de radio 2.5"
+              : familia === "grilla"
+                ? ", familia de trayectorias por una grilla de puntos"
+                : ""
+          }, autovectores reales (punteado) y la trayectoria de (x₀, y₀)`}
         >
           <PhasePlane
             xDomain={[-LIM, LIM]}
@@ -178,6 +196,7 @@ export const sistemas: Model = {
   ejercicio: "Ej. 4",
   title: "Sistemas lineales 2×2",
   description: "Diagramas en bloques, autovalores y clasificación del equilibrio.",
+  question: "¿Qué revela la matriz A sobre la estabilidad y la forma de las trayectorias?",
   equation: String.raw`\begin{pmatrix}\dot x\\ \dot y\end{pmatrix} = \begin{pmatrix}a_{11} & a_{12}\\ a_{21} & a_{22}\end{pmatrix}\begin{pmatrix}x\\ y\end{pmatrix}`,
   params: [
     {
@@ -197,8 +216,19 @@ export const sistemas: Model = {
     { key: "y0", label: "y inicial", symbol: "y_0", min: -2.5, max: 2.5, step: 0.05, group: "Condición inicial" },
     { key: "tFin", label: "Tiempo de simulación", symbol: "t_f", min: 0.5, max: 15, step: 0.5, group: "Simulación" },
     { key: "h", label: "Paso de Euler del diagrama", symbol: "h", min: 0.0005, max: 0.1, step: 0.0005, group: "Simulación" },
+    {
+      kind: "select",
+      key: "familia",
+      label: "Familia de trayectorias (plano de fase)",
+      group: "Simulación",
+      options: [
+        { value: "circulo", label: "Desde un círculo (8)" },
+        { value: "grilla", label: "Grilla densa (20, ida y vuelta)" },
+        { value: "ninguna", label: "Ocultar" },
+      ],
+    },
   ],
-  defaults: { sistema: "a", a11: 1, a12: 2, a21: -5, a22: 2, x0: 1, y0: -1, tFin: 3, h: 0.001 },
+  defaults: { sistema: "a", a11: 1, a12: 2, a21: -5, a22: 2, x0: 1, y0: -1, tFin: 3, h: 0.001, familia: "circulo" },
   onChange: (key, value, p) => {
     if (key === "sistema" && SISTEMAS[String(value)]) {
       const [[a11, a12], [a21, a22]] = SISTEMAS[String(value)]

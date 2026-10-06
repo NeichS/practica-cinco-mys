@@ -1,10 +1,10 @@
 "use client"
 
 import { Fragment } from "react"
-import { RotateCcw } from "lucide-react"
+import { RotateCcw, SlidersHorizontal } from "lucide-react"
 import { Tex } from "@/components/tex"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -41,7 +41,7 @@ function SliderParam({ def, value, onChange }: { def: Extract<ParamDef, { min: n
             }}
             className="h-7 w-20 px-2 text-right font-mono text-xs tabular-nums"
           />
-          {def.unit && <span className="w-10 text-xs text-muted-foreground">{def.unit}</span>}
+          {def.unit && <span className="min-w-8 text-xs text-muted-foreground">{def.unit}</span>}
         </div>
       </div>
       <Slider
@@ -68,28 +68,37 @@ export function ParamPanel({
   onReset: () => void
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Parámetros</CardTitle>
+    <Card className="shadow-[0_14px_36px_-30px_var(--foreground)]">
+      <CardHeader className="border-b pb-4">
+        <CardTitle className="flex items-center gap-2">
+          <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary">
+            <SlidersHorizontal className="size-4" aria-hidden="true" />
+          </span>
+          Experimentá
+        </CardTitle>
+        <CardDescription>Elegí un caso o mové los controles. Todo se recalcula al instante.</CardDescription>
         <CardAction>
-          <Button variant="ghost" size="sm" onClick={onReset}>
-            <RotateCcw /> Restablecer
+          <Button variant="ghost" size="icon-sm" onClick={onReset} aria-label="Restablecer parámetros" title="Restablecer parámetros">
+            <RotateCcw />
           </Button>
         </CardAction>
       </CardHeader>
       <CardContent className="grid grid-cols-[minmax(0,1fr)] gap-5">
         {model.presets && (
-          <div className="flex flex-wrap gap-1.5">
-            {model.presets.map((pr) => (
-              <Button
-                key={pr.label}
-                variant="outline"
-                size="xs"
-                onClick={() => Object.entries(pr.values).forEach(([k, v]) => onChange(k, v))}
-              >
-                {pr.label}
-              </Button>
-            ))}
+          <div className="grid gap-2">
+            <div className="text-xs font-medium text-muted-foreground">Escenarios rápidos</div>
+            <div className="flex flex-wrap gap-1.5">
+              {model.presets.map((pr) => (
+                <Button
+                  key={pr.label}
+                  variant="outline"
+                  size="xs"
+                  onClick={() => Object.entries(pr.values).forEach(([k, v]) => onChange(k, v))}
+                >
+                  {pr.label}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
         {model.params.map((def, i) => {
@@ -97,7 +106,7 @@ export function ParamPanel({
             def.group && def.group !== model.params[i - 1]?.group ? (
               <div className="grid gap-3 pt-1">
                 <Separator />
-                <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{def.group}</div>
+                <div className="text-xs font-semibold tracking-wide text-foreground/70 uppercase">{def.group}</div>
               </div>
             ) : null
           let control

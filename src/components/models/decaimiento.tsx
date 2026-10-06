@@ -3,13 +3,16 @@
 import { useMemo } from "react"
 import { ChartCard } from "@/components/chart-card"
 import { Stat, StatGrid } from "@/components/stat"
-import { TimeChart, type RefLine } from "@/components/time-chart"
+import { TimeChart, type RefLine, type Series } from "@/components/time-chart"
 import { binomial, fmt, rk4, rng } from "@/lib/ode"
 import { TEORIA } from "./teoria"
 import { num, type Model, type Params } from "./types"
 
 const N = 300
 const CADA = 15
+/** Fracciones iniciales C = N(0)/N₀ de la familia N = C·N₀·e^{−λt}. */
+const FAMILIA_C = [0.2, 0.4, 0.6, 0.8]
+const FAMILIA_T = [0.25, 0.5, 2, 4]
 
 export const ISOTOPOS: Record<string, { label: string; thalf: number; unidad: string }> = {
   c14: { label: "Carbono-14", thalf: 5730, unidad: "años" },
@@ -26,6 +29,7 @@ function View({ p }: { p: Params }) {
   const nMC = num(p, "nMC")
   const seed = num(p, "seed")
   const frac = num(p, "frac")
+  const superponer = String(p.superponer)
   const u = unidad(p)
 
   const lam = Math.log(2) / thalf
@@ -43,6 +47,8 @@ function View({ p }: { p: Params }) {
       const t = i * h
       if (i > 0) restantes -= binomial(restantes, pDec, rand)
       const row: Record<string, number | null> = { t, N: Math.exp(-lam * t), rk4: null, mc: restantes / nMC }
+      if (superponer === "c") FAMILIA_C.forEach((c, j) => (row[`f${j}`] = c * Math.exp(-lam * t)))
+      if (superponer === "t") FAMILIA_T.forEach((m, j) => (row[`f${j}`] = Math.exp((-lam / m) * t)))
       if (i % CADA === 0) {
         row.rk4 = sol.zs[i / CADA][0]
         err = Math.max(err, Math.abs(row.rk4 - Math.exp(-lam * t)) / Math.exp(-lam * t))
@@ -50,7 +56,21 @@ function View({ p }: { p: Params }) {
       data.push(row)
     }
     return { data, err }
-  }, [lam, tFin, nMC, seed])
+  }, [lam, tFin, nMC, seed, superponer])
+
+  const etiquetas =
+    superponer === "c"
+      ? FAMILIA_C.map((c) => `N(0) = ${c}·N₀`)
+      : superponer === "t"
+        ? FAMILIA_T.map((m) => `T½ = ${fmt(m * thalf)} ${u}`)
+        : []
+  const familia: Series[] = etiquetas.map((label, j) => ({
+    key: `f${j}`,
+    label,
+    color: `var(--chart-${j + 2})`,
+    width: 1.25,
+    dashed: true,
+  }))
 
   const refs: RefLine[] = []
   for (let n = 1; n <= ciclos; n++) refs.push({ x: n * thalf, label: n === 1 ? "T½" : `${n}T½` })
@@ -70,15 +90,26 @@ function View({ p }: { p: Params }) {
       </StatGrid>
       <ChartCard
         title="Fracción de núcleos sin decaer"
-        description={`Analítica, RK4 y una simulación Monte Carlo con ${nMC.toLocaleString("es-AR")} núcleos (cada núcleo decae con probabilidad 1 − e^(−λΔt) por paso)`}
+        description={
+          superponer === "c"
+            ? "Familia de soluciones N = C·e^(−λt): distinta cantidad inicial, mismo isótopo. Todas se reducen a la mitad en el mismo T½."
+            : superponer === "t"
+              ? "Mismo N₀ con distintos períodos de semidesintegración: cuanto mayor T½, más lento el decaimiento."
+              : `Analítica, RK4 y una simulación Monte Carlo con ${nMC.toLocaleString("es-AR")} núcleos (cada núcleo decae con probabilidad 1 − e^(−λΔt) por paso)`
+        }
       >
         <TimeChart
           data={data}
-          series={[
-            { key: "mc", label: `Monte Carlo (${nMC})`, color: "var(--chart-3)", type: "step", width: 1.5 },
-            { key: "N", label: "N/N₀ analítica", color: "var(--chart-1)", width: 2.5 },
-            { key: "rk4", label: "RK4", color: "var(--chart-2)", type: "dots" },
-          ]}
+          series={
+            familia.length
+              ? // con la familia visible se ocultan RK4 y Monte Carlo para no repetir colores
+                [...familia, { key: "N", label: "N/N₀ analítica", color: "var(--chart-1)", width: 2.5 }]
+              : [
+                  { key: "mc", label: `Monte Carlo (${nMC})`, color: "var(--chart-3)", type: "step", width: 1.5 },
+                  { key: "N", label: "N/N₀ analítica", color: "var(--chart-1)", width: 2.5 },
+                  { key: "rk4", label: "RK4", color: "var(--chart-2)", type: "dots" },
+                ]
+          }
           xLabel={`t [${u}]`}
           yLabel="N / N₀"
           yDomain={[0, 1]}
@@ -94,6 +125,7 @@ export const decaimiento: Model = {
   ejercicio: "Ej. 3",
   title: "Decaimiento radiactivo",
   description: "Desintegración de un isótopo y datación por carbono-14.",
+  question: "¿Cómo conectan la vida media, la datación y el comportamiento aleatorio de los núcleos?",
   equation: String.raw`\frac{dN}{dt} = -\lambda\,N \;\Rightarrow\; N(t) = N_0\,e^{-\lambda t},\quad \lambda = \frac{\ln 2}{T_{1/2}}`,
   params: [
     {
@@ -107,8 +139,19 @@ export const decaimiento: Model = {
     { key: "nMC", label: "Núcleos Monte Carlo", symbol: "n", min: 10, max: 5000, step: 10, group: "Simulación" },
     { key: "seed", label: "Semilla aleatoria", symbol: "s", min: 0, max: 100, step: 1, group: "Simulación" },
     { key: "frac", label: "Fracción remanente", symbol: "N/N_0", min: 0.01, max: 0.99, step: 0.01, group: "Análisis" },
+    {
+      kind: "select",
+      key: "superponer",
+      label: "Superponer curvas",
+      group: "Análisis",
+      options: [
+        { value: "ninguna", label: "Ninguna" },
+        { value: "c", label: "Familia de soluciones (distintas N(0))" },
+        { value: "t", label: "Familia de T½ (¼ … 4 veces)" },
+      ],
+    },
   ],
-  defaults: { isotopo: "c14", thalf: 5730, ciclos: 5, nMC: 1000, seed: 0, frac: 0.3 },
+  defaults: { isotopo: "c14", thalf: 5730, ciclos: 5, nMC: 1000, seed: 0, frac: 0.3, superponer: "ninguna" },
   onChange: (key, value, p) => {
     if (key === "isotopo" && ISOTOPOS[String(value)]) return { ...p, thalf: ISOTOPOS[String(value)].thalf }
     if (key === "thalf") return { ...p, isotopo: "custom" }

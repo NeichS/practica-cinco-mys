@@ -46,6 +46,8 @@ export type Model = {
   ejercicio: string
   title: string
   description: string
+  /** Pregunta guía para presentar e interpretar el modelo. */
+  question: string
   equation: string
   params: ParamDef[]
   defaults: Params

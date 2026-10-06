@@ -22,6 +22,7 @@ function View({ p, set }: { p: Params; set: (patch: Params) => void }) {
   const tFin = num(p, "tFin")
   const h = num(p, "h")
   const metodos = Boolean(p.metodos)
+  const familia = String(p.familia)
 
   const f = (_: number, [x, y]: number[]) => [a * x - b * x * y, d * x * y - g * y]
   const V = (x: number, y: number) => d * x - g * Math.log(x) + b * y - a * Math.log(y)
@@ -62,13 +63,15 @@ function View({ p, set }: { p: Params; set: (patch: Params) => void }) {
 
   const orbitas = useMemo(() => {
     const out: Trajectory[] = []
-    for (const k of [0.3, 0.6, 1.3, 2]) {
+    const escalas =
+      familia === "densa" ? [0.15, 0.3, 0.45, 0.6, 0.8, 1.2, 1.4, 1.7, 2, 2.5] : familia === "orbitas" ? [0.3, 0.6, 1.3, 2] : []
+    for (const k of escalas) {
       const s = rk4(f, [xEq * k, yEq], 30, 0.01)
       out.push({ pts: s.zs.map(([x, y]) => [x, y]), color: "var(--muted-foreground)", width: 1.1, opacity: 0.6 })
     }
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [a, b, d, g])
+  }, [a, b, d, g, familia])
 
   const tr: Trajectory[] = [...orbitas]
   if (metodos) {
@@ -113,7 +116,7 @@ function View({ p, set }: { p: Params; set: (patch: Params) => void }) {
                 <Leyenda c="chart-1">referencia</Leyenda>
                 <Leyenda c="chart-2">Euler h = {h}</Leyenda>
                 <Leyenda c="chart-3">RK4 h = {h}</Leyenda>
-                <span>· gris: otras órbitas</span>
+                {familia !== "ninguna" && <span>· gris: familia de órbitas</span>}
               </span>
             ) : (
               "Órbitas cerradas alrededor del equilibrio (★). Clic para elegir (x₀, y₀)."
@@ -176,6 +179,7 @@ export const lotkaVolterra: Model = {
   ejercicio: "Ej. 5",
   title: "Lotka-Volterra",
   description: "Modelo depredador-presa: oscilaciones y conservación.",
+  question: "¿Por qué presas y depredadores oscilan y qué determina el tamaño de cada ciclo?",
   equation: String.raw`\dot x = \alpha x - \beta x y,\qquad \dot y = \delta x y - \gamma y`,
   params: [
     { key: "alpha", label: "Natalidad de presas", symbol: "\\alpha", min: 0.1, max: 3, step: 0.05 },
@@ -187,8 +191,19 @@ export const lotkaVolterra: Model = {
     { key: "tFin", label: "Tiempo de simulación", symbol: "t_f", min: 10, max: 150, step: 5, group: "Simulación" },
     { key: "h", label: "Paso de Euler / RK4", symbol: "h", min: 0.005, max: 0.2, step: 0.005, group: "Simulación" },
     { kind: "switch", key: "metodos", label: "Comparar Euler vs RK4 en el plano de fase", group: "Simulación" },
+    {
+      kind: "select",
+      key: "familia",
+      label: "Familia de órbitas (plano de fase)",
+      group: "Simulación",
+      options: [
+        { value: "orbitas", label: "4 órbitas" },
+        { value: "densa", label: "10 órbitas (curvas de nivel de V)" },
+        { value: "ninguna", label: "Ocultar" },
+      ],
+    },
   ],
-  defaults: { alpha: 1.1, beta: 0.4, delta: 0.1, gamma: 0.4, x0: 10, y0: 10, tFin: 50, h: 0.05, metodos: true },
+  defaults: { alpha: 1.1, beta: 0.4, delta: 0.1, gamma: 0.4, x0: 10, y0: 10, tFin: 50, h: 0.05, metodos: true, familia: "orbitas" },
   presets: [
     { label: "Práctico", values: { alpha: 1.1, beta: 0.4, delta: 0.1, gamma: 0.4, x0: 10, y0: 10 } },
     { label: "Cerca del equilibrio", values: { alpha: 1.1, beta: 0.4, delta: 0.1, gamma: 0.4, x0: 4.5, y0: 3 } },

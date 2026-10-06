@@ -46,7 +46,8 @@ export const TEORIA: Record<string, Teoria> = {
       r`La línea azul es la solución exacta y los puntos naranjas son RK4: si coinciden, el método numérico es correcto (el error se muestra en la última tarjeta).`,
       r`La línea horizontal punteada es $T_{amb}$, la asíntota a la que tiende la curva. La vertical marca $t=\tau$.`,
       r`Con $k<0$ (preset "k < 0") la diferencia **crece** exponencialmente: el equilibrio se vuelve inestable y el modelo deja de ser físico, porque el calor pasaría del cuerpo frío al caliente.`,
-      r`Activá "Superponer familia de k" para ver que todas las curvas parten de $T_0$ y llegan a $T_{amb}$; $k$ solo cambia qué tan rápido.`,
+      r`En "Superponer curvas" → **familia de soluciones** se dibuja $T = T_{amb} + C\,e^{-kt}$ para varios $C = T_0 - T_{amb}$: es la solución general de la EDO, y cada condición inicial elige una curva. Todas tienden a $T_{amb}$ y nunca se cruzan (unicidad de la solución).`,
+      r`Con **familia de k** todas las curvas parten de $T_0$ y llegan a $T_{amb}$; $k$ solo cambia qué tan rápido.`,
     ],
   },
 
@@ -77,6 +78,7 @@ export const TEORIA: Record<string, Teoria> = {
     lectura: [
       r`Las líneas verticales punteadas están separadas por $t_d$: entre cada par de líneas la población se duplica.`,
       r`Activá "Eje vertical logarítmico" para ver la curva convertida en recta; cambiá $r$ y mirá cómo cambia la pendiente.`,
+      r`"Superponer curvas" → **familia de soluciones** dibuja $P = C\,e^{rt}$ para varias poblaciones iniciales: en escala log son rectas **paralelas** (misma pendiente $r$). Con **familia de r** las rectas cambian de pendiente.`,
       r`Limitación: el modelo crece sin límite, lo que deja de ser realista en tiempos largos. El modelo logístico de Verhulst agrega una capacidad máxima.`,
     ],
   },
@@ -124,6 +126,7 @@ export const TEORIA: Record<string, Teoria> = {
       r`Línea azul: solución exacta. Puntos: RK4. Escalones verdes: Monte Carlo con $n$ núcleos.`,
       r`Con pocos núcleos (bajá "Núcleos Monte Carlo" a 50) el Monte Carlo fluctúa mucho alrededor de la curva; con muchos se pega a ella. Cambiá la semilla para obtener otra realización del azar.`,
       r`La línea horizontal en 0.5 corta a la curva exactamente en $t = T_{1/2}$.`,
+      r`"Superponer curvas" → **familia de soluciones** dibuja $N = C\,e^{-\lambda t}$ para varias cantidades iniciales: cada una se reduce a la mitad en el mismo $T_{1/2}$. Con **familia de T½** se comparan isótopos más rápidos y más lentos.`,
     ],
   },
 
@@ -169,6 +172,7 @@ export const TEORIA: Record<string, Teoria> = {
     lectura: [
       r`Elegí los sistemas (a)–(f) del práctico o mové los coeficientes: el diagrama en bloques se redibuja (si un $a_{ij}=0$ su bloque desaparece) y la clasificación se actualiza.`,
       r`En el plano de fase, las flechas son el campo de direcciones $(\dot x, \dot y)$, las curvas naranjas son trayectorias de prueba y la azul es la de $(x_0, y_0)$. Hacé clic en el plano para cambiar la condición inicial.`,
+      r`"Familia de trayectorias" muestra varias soluciones del mismo sistema con distintas condiciones iniciales: juntas forman el **retrato de fase**. La grilla densa integra cada punto hacia adelante y hacia atrás, útil para ver las separatrices de un punto silla.`,
       r`En la respuesta temporal, las líneas son la solución exacta y los puntos la simulación del diagrama con Euler. Subí $h$ para ver cómo crece el error.`,
     ],
   },
@@ -215,6 +219,7 @@ export const TEORIA: Record<string, Teoria> = {
     lectura: [
       r`Evolución temporal: el pico de depredadores llega **después** del de presas (≈ 1/4 de ciclo de desfase).`,
       r`Plano de fase: con "Comparar Euler vs RK4" activado, Euler (naranja) se abre en espiral porque agrega "energía" en cada paso, mientras que RK4 se mantiene sobre la órbita. Es un error del método, no del modelo.`,
+      r`"Familia de órbitas": cada órbita gris es una curva de nivel $V(x,y) = c$ distinta; cuanto más lejos del equilibrio, mayor la amplitud y el período de la oscilación.`,
       r`Deriva de $V$: escala logarítmica del error $|V - V_0|$. Euler queda varios órdenes de magnitud por encima de RK4; probá cambiar $h$.`,
     ],
   },
