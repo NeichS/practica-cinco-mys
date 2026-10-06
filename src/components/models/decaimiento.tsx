@@ -13,6 +13,12 @@ const CADA = 15
 /** Fracciones iniciales C = N(0)/N₀ de la familia N = C·N₀·e^{−λt}. */
 const FAMILIA_C = [0.2, 0.4, 0.6, 0.8]
 const FAMILIA_T = [0.25, 0.5, 2, 4]
+/** Cantidades de sustancia comparadas en los gráficos de actividad (múltiplos de N₀). */
+const MUESTRAS = [
+  { k: 0.5, label: "½·N₀", color: "var(--chart-2)" },
+  { k: 1, label: "N₀", color: "var(--chart-1)" },
+  { k: 2, label: "2·N₀", color: "var(--chart-3)" },
+]
 
 /** Unidades de tiempo disponibles, con su equivalencia en segundos. */
 export const UNIDADES: Record<string, { label: string; singular: string; segundos: number }> = {
@@ -39,7 +45,9 @@ function View({ p }: { p: Params }) {
   const seed = num(p, "seed")
   const frac = num(p, "frac")
   const superponer = String(p.superponer)
+  const N0 = num(p, "N0")
   const u = unidad(p)
+  const us = UNIDADES[u]?.singular ?? u
 
   const lam = Math.log(2) / thalf
   const tFin = ciclos * thalf
@@ -80,6 +88,26 @@ function View({ p }: { p: Params }) {
     width: 1.25,
     dashed: true,
   }))
+
+  // Actividad A = λN: desintegraciones por unidad de tiempo
+  const actividad = useMemo(() => {
+    const temporal: Record<string, number | null>[] = []
+    for (let i = 0; i <= 200; i++) {
+      const t = (i * tFin) / 200
+      const row: Record<string, number | null> = { t }
+      MUESTRAS.forEach((m, j) => (row[`a${j}`] = lam * m.k * N0 * Math.exp(-lam * t)))
+      temporal.push(row)
+    }
+    // A en función de N: recta por el origen; los puntos marcan el inicio de cada muestra
+    const vsN: Record<string, number | null>[] = []
+    for (let i = 0; i <= 40; i++) {
+      const n = (i * 2.2 * N0) / 40
+      vsN.push({ n, A: lam * n, p: null })
+    }
+    MUESTRAS.forEach((m) => vsN.push({ n: m.k * N0, A: null, p: lam * m.k * N0 }))
+    vsN.sort((a, b) => Number(a.n) - Number(b.n))
+    return { temporal, vsN }
+  }, [lam, tFin, N0])
 
   const refs: RefLine[] = []
   for (let n = 1; n <= ciclos; n++) refs.push({ x: n * thalf, label: n === 1 ? "T½" : `${n}T½` })
@@ -125,6 +153,48 @@ function View({ p }: { p: Params }) {
           refLines={refs}
         />
       </ChartCard>
+
+      <StatGrid>
+        <Stat label="Actividad inicial A₀ = λ·N₀" value={`${fmt(lam * N0)} /${us}`} hint={`desintegraciones por ${us} con ${fmt(N0)} núcleos`} />
+        <Stat label="Con el doble de sustancia (2·N₀)" value={`${fmt(2 * lam * N0)} /${us}`} hint="el doble de desintegraciones" />
+        <Stat label="A / N (para cualquier N)" value={`${fmt(lam)} /${us}`} hint="siempre λ: la proporción no cambia" />
+        <Stat
+          label={`Decae en 1 ${us}`}
+          value={`${fmt((1 - Math.exp(-lam)) * 100)} %`}
+          hint="de lo que haya, sea mucho o poco"
+        />
+      </StatGrid>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ChartCard
+          title="Desintegraciones por unidad de tiempo"
+          description={`Actividad A(t) = λ·N(t) para tres cantidades de sustancia. Más sustancia → más desintegraciones por ${us}, y cada curva baja a la mitad en el mismo T½.`}
+        >
+          <TimeChart
+            data={actividad.temporal}
+            series={MUESTRAS.map((m, j) => ({ key: `a${j}`, label: `A con ${m.label}`, color: m.color, width: m.k === 1 ? 2.5 : 1.75 }))}
+            xLabel={`t [${u}]`}
+            yLabel={`A [1/${us}]`}
+            refLines={[{ x: thalf, label: "T½" }]}
+            className="aspect-[6/5] w-full"
+          />
+        </ChartCard>
+        <ChartCard
+          title="Actividad en función de los núcleos"
+          description="A = λ·N es una recta que pasa por el origen con pendiente λ: duplicar N duplica A. Los puntos son las tres muestras al inicio."
+        >
+          <TimeChart
+            data={actividad.vsN}
+            xKey="n"
+            series={[
+              { key: "A", label: "A = λ·N", color: "var(--chart-1)", width: 2.5 },
+              { key: "p", label: "½·N₀, N₀ y 2·N₀", color: "var(--chart-2)", type: "dots" },
+            ]}
+            xLabel="N (núcleos)"
+            yLabel={`A [1/${us}]`}
+            className="aspect-[6/5] w-full"
+          />
+        </ChartCard>
+      </div>
     </div>
   )
 }
@@ -154,6 +224,7 @@ export const decaimiento: Model = {
     { key: "nMC", label: "Núcleos Monte Carlo", symbol: "n", min: 10, max: 5000, step: 10, group: "Simulación" },
     { key: "seed", label: "Semilla aleatoria", symbol: "s", min: 0, max: 100, step: 1, group: "Simulación" },
     { key: "frac", label: "Fracción remanente", symbol: "N/N_0", min: 0.01, max: 0.99, step: 0.01, group: "Análisis" },
+    { key: "N0", label: "Núcleos iniciales", symbol: "N_0", min: 100, max: 100000, step: 100, group: "Análisis" },
     {
       kind: "select",
       key: "superponer",
@@ -166,7 +237,7 @@ export const decaimiento: Model = {
       ],
     },
   ],
-  defaults: { isotopo: "c14", thalf: 5730, unidad: "años", ciclos: 5, nMC: 1000, seed: 0, frac: 0.3, superponer: "ninguna" },
+  defaults: { isotopo: "c14", thalf: 5730, unidad: "años", ciclos: 5, nMC: 1000, seed: 0, frac: 0.3, N0: 10000, superponer: "ninguna" },
   onChange: (key, value, p, previo) => {
     if (key === "isotopo" && ISOTOPOS[String(value)]) {
       const iso = ISOTOPOS[String(value)]

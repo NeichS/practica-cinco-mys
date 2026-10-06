@@ -97,6 +97,11 @@ export const TEORIA: Record<string, Teoria> = {
         texto: r`Permite calcular cuánto material queda en cualquier momento. En la app se grafica $N/N_0$ (fracción restante), que va de 1 a 0 sin depender de $N_0$.`,
       },
       {
+        nombre: "Actividad",
+        tex: r`A(t) = \left|\frac{dN}{dt}\right| = \lambda\,N(t)`,
+        texto: r`Cantidad de **desintegraciones por unidad de tiempo** (en el SI se mide en becquerel, 1 Bq = 1 desintegración/s). Es proporcional a $N$: con el doble de sustancia hay el doble de desintegraciones por segundo, pero la **proporción** $A/N = \lambda$ es siempre la misma. Por eso más sustancia no se "vacía" más rápido en porcentaje y $T_{1/2}$ no depende de $N_0$.`,
+      },
+      {
         nombre: "Período de semidesintegración",
         tex: r`T_{1/2} = \frac{\ln 2}{\lambda}`,
         texto: r`Tiempo en que la mitad de los núcleos decae. Es el dato que se tabula para cada isótopo (5730 años para el C-14) y la fórmula sirve para pasar de $T_{1/2}$ a $\lambda$ y viceversa.`,
@@ -126,6 +131,7 @@ export const TEORIA: Record<string, Teoria> = {
       r`Línea azul: solución exacta. Puntos: RK4. Escalones verdes: Monte Carlo con $n$ núcleos.`,
       r`Con pocos núcleos (bajá "Núcleos Monte Carlo" a 50) el Monte Carlo fluctúa mucho alrededor de la curva; con muchos se pega a ella. Cambiá la semilla para obtener otra realización del azar.`,
       r`La línea horizontal en 0.5 corta a la curva exactamente en $t = T_{1/2}$.`,
+      r`Gráficos de **actividad**: con $2N_0$ la curva arranca al doble de altura (el doble de desintegraciones por unidad de tiempo), pero las tres curvas bajan a la mitad en el mismo $T_{1/2}$. En "Actividad en función de los núcleos" la relación $A = \lambda N$ es una recta por el origen: esa recta **es** la proporcionalidad.`,
       r`"Superponer curvas" → **familia de soluciones** dibuja $N = C\,e^{-\lambda t}$ para varias cantidades iniciales: cada una se reduce a la mitad en el mismo $T_{1/2}$. Con **familia de T½** se comparan isótopos más rápidos y más lentos.`,
     ],
   },
